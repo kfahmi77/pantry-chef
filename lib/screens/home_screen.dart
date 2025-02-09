@@ -1,20 +1,80 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 
-import '../widgets/animated_button.dart';
+import '../services/service_ai.dart';
 import '../widgets/ingredient_input.dart';
-import 'history_screen.dart';
 import 'loading_screen.dart';
 import 'recipe_result_screen.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  _HomeScreenState createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final AIService _aiService = AIService(); // Gunakan AIService
+  final List<String> _ingredients = [];
+  final TextEditingController _controller = TextEditingController();
+
+  void _addIngredient(String ingredient) {
+    if (ingredient.trim().isNotEmpty) {
+      setState(() {
+        _ingredients.add(ingredient.trim());
+      });
+      _controller.clear();
+    }
+  }
+
+  void _removeIngredient(int index) {
+    setState(() {
+      _ingredients.removeAt(index);
+    });
+  }
+
+  Future<void> _generateRecipe() async {
+    if (_ingredients.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Masukkan minimal 1 bahan!')),
+      );
+      return;
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const LoadingScreen(),
+      ),
+    );
+
+    try {
+      final recipe = await _aiService.generateRecipe(_ingredients);
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => RecipeResultScreen(
+            recipeName: recipe['nama_resep'],
+            ingredients: List<String>.from(recipe['bahan']),
+            steps: List<String>.from(recipe['langkah']),
+            tips: recipe['tips_penyajian'],
+            wtfLevel: recipe['wtfLevel'],
+          ),
+        ),
+      );
+      print(recipe);
+    } catch (e) {
+      Navigator.pop(context); // Kembali ke halaman utama
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        centerTitle: false,
         title: Image.asset(
           'assets/images/logo.jpg',
           height: 40,
@@ -44,7 +104,11 @@ class HomeScreen extends StatelessWidget {
               const SizedBox(height: 16),
 
               // Input Bahan
-              const IngredientInput(),
+              IngredientInput(
+                ingredients: _ingredients,
+                onAdd: _addIngredient,
+                onRemove: _removeIngredient,
+              ),
 
               const SizedBox(height: 24),
 
@@ -62,43 +126,7 @@ class HomeScreen extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  // Di dalam HomeScreen, update onPressed tombol "Generate Resep":
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const LoadingScreen(),
-                      ),
-                    );
-
-                    // Simulasikan proses loading selama 5 detik
-                    Future.delayed(const Duration(seconds: 5), () {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => RecipeResultScreen(
-                            recipeName: 'Nasi Goreng Tempe Surprise',
-                            ingredients: [
-                              'Nasi sisa 1 piring',
-                              'Tempe 200g',
-                              'Telur 2 butir',
-                              'Kecap manis'
-                            ],
-                            steps: [
-                              'Potong tempe kecil-kecil.',
-                              'Panaskan wajan, tumis tempe hingga kecoklatan.',
-                              'Masukkan nasi dan aduk rata.',
-                              'Tambahkan kecap manis dan telur, aduk hingga matang.',
-                              'Sajikan panas.',
-                            ],
-                            tips:
-                                'Tambahkan irisan cabai rawit untuk rasa pedas.',
-                            wtfLevel: 4,
-                          ),
-                        ),
-                      );
-                    });
-                  },
+                  onPressed: _generateRecipe,
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
@@ -111,24 +139,13 @@ class HomeScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              AnimatedButton(
-                onPressed: () {
-                  // Navigasi ke halaman hasil resep
-                },
-                text: 'Generate Resep',
-              ),
+
               const SizedBox(height: 16),
 
               // Tombol Riwayat
               TextButton(
-                // Di dalam HomeScreen, update onPressed tombol "Lihat Riwayat":
                 onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => HistoryScreen(),
-                    ),
-                  );
+                  // Navigasi ke halaman riwayat
                 },
                 child: const Text('Lihat Riwayat'),
               ),

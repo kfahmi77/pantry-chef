@@ -1,29 +1,29 @@
 import 'package:flutter/material.dart';
 
 class IngredientInput extends StatefulWidget {
-  const IngredientInput({super.key});
+  final List<String> ingredients;
+  final Function(String) onAdd;
+  final Function(int) onRemove;
+
+  const IngredientInput({
+    super.key,
+    required this.ingredients,
+    required this.onAdd,
+    required this.onRemove,
+  });
 
   @override
   State<IngredientInput> createState() => _IngredientInputState();
 }
 
 class _IngredientInputState extends State<IngredientInput> {
-  final List<String> _ingredients = [];
   final TextEditingController _controller = TextEditingController();
 
   void _addIngredient(String ingredient) {
     if (ingredient.trim().isNotEmpty) {
-      setState(() {
-        _ingredients.add(ingredient.trim());
-      });
+      widget.onAdd(ingredient.trim());
       _controller.clear();
     }
-  }
-
-  void _removeIngredient(int index) {
-    setState(() {
-      _ingredients.removeAt(index);
-    });
   }
 
   @override
@@ -56,12 +56,12 @@ class _IngredientInputState extends State<IngredientInput> {
         Wrap(
           spacing: 8,
           runSpacing: 8,
-          children: _ingredients.map((ingredient) {
+          children: widget.ingredients.asMap().entries.map((entry) {
+            final index = entry.key;
+            final ingredient = entry.value;
             return Chip(
               label: Text(ingredient),
-              onDeleted: () {
-                _removeIngredient(_ingredients.indexOf(ingredient));
-              },
+              onDeleted: () => widget.onRemove(index),
             );
           }).toList(),
         ),
