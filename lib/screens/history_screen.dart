@@ -65,9 +65,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     height: 150,
                   ),
                   const SizedBox(height: 16),
-                  const Text(
-                    'Belum ada resep yang di-generate.',
-                    style: TextStyle(fontSize: 16),
+                  AnimatedOpacity(
+                    opacity: recipes.isEmpty ? 1.0 : 0.0,
+                    duration: const Duration(milliseconds: 500),
+                    child: const Text(
+                      'Belum ada resep yang di-generate.',
+                      style: TextStyle(fontSize: 16),
+                    ),
                   ),
                 ],
               ),

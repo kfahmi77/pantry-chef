@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 
+import '../widgets/animated_button.dart';
 import '../widgets/ingredient_input.dart';
 import 'history_screen.dart';
+import 'loading_screen.dart';
 import 'recipe_result_screen.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -60,31 +62,42 @@ class HomeScreen extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
+                  // Di dalam HomeScreen, update onPressed tombol "Generate Resep":
                   onPressed: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const RecipeResultScreen(
-                          recipeName: 'Nasi Goreng Tempe Surprise',
-                          ingredients: [
-                            'Nasi sisa 1 piring',
-                            'Tempe 200g',
-                            'Telur 2 butir',
-                            'Kecap manis'
-                          ],
-                          steps: [
-                            'Potong tempe kecil-kecil.',
-                            'Panaskan wajan, tumis tempe hingga kecoklatan.',
-                            'Masukkan nasi dan aduk rata.',
-                            'Tambahkan kecap manis dan telur, aduk hingga matang.',
-                            'Sajikan panas.',
-                          ],
-                          tips:
-                              'Tambahkan irisan cabai rawit untuk rasa pedas.',
-                          wtfLevel: 5,
-                        ),
+                        builder: (context) => const LoadingScreen(),
                       ),
                     );
+
+                    // Simulasikan proses loading selama 5 detik
+                    Future.delayed(const Duration(seconds: 5), () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => RecipeResultScreen(
+                            recipeName: 'Nasi Goreng Tempe Surprise',
+                            ingredients: [
+                              'Nasi sisa 1 piring',
+                              'Tempe 200g',
+                              'Telur 2 butir',
+                              'Kecap manis'
+                            ],
+                            steps: [
+                              'Potong tempe kecil-kecil.',
+                              'Panaskan wajan, tumis tempe hingga kecoklatan.',
+                              'Masukkan nasi dan aduk rata.',
+                              'Tambahkan kecap manis dan telur, aduk hingga matang.',
+                              'Sajikan panas.',
+                            ],
+                            tips:
+                                'Tambahkan irisan cabai rawit untuk rasa pedas.',
+                            wtfLevel: 4,
+                          ),
+                        ),
+                      );
+                    });
                   },
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
@@ -98,7 +111,12 @@ class HomeScreen extends StatelessWidget {
                   ),
                 ),
               ),
-
+              AnimatedButton(
+                onPressed: () {
+                  // Navigasi ke halaman hasil resep
+                },
+                text: 'Generate Resep',
+              ),
               const SizedBox(height: 16),
 
               // Tombol Riwayat
