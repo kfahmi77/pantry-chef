@@ -2,11 +2,11 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class AIService {
-  final String apiKey = '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';
-  final String apiUrl = 'http://localhost:1234/v1/chat/completions';
+  final String apiKey = 'AIzaSyDathaLXmV9iKQJnc0H7sw7T8mOWAMD2QE';
+  final String apiUrl =
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
 
   Future<Map<String, dynamic>> generateRecipe(List<String> ingredients) async {
-    // Create a more structured prompt that enforces JSON output
     final String prompt = """
     Buat resep menggunakan bahan berikut: ${ingredients.join(', ')}
 
@@ -24,29 +24,28 @@ class AIService {
 
     try {
       final response = await http.post(
-        Uri.parse(apiUrl),
+        Uri.parse('$apiUrl?key=$apiKey'),
         headers: {
           'Content-Type': 'application/json',
         },
         body: jsonEncode({
-          'model': 'llama-3.2-3b-instruct',
-          'messages': [
+          "contents": [
             {
-              'role': 'system',
-              'content':
-                  'Anda adalah chef AI yang akan memberikan resep dalam format JSON yang valid. Jangan tambahkan teks apapun selain JSON yang diminta.'
-            },
-            {'role': 'user', 'content': prompt},
+              "parts": [
+                {"text": prompt}
+              ]
+            }
           ],
-          'max_tokens': 500,
-          'temperature': 0.1,
-          'stream': false
+          "generationConfig": {
+            "temperature": 0.1,
+            "maxOutputTokens": 500,
+          }
         }),
       );
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = jsonDecode(response.body);
-        String content = data['choices'][0]['message']['content'];
+        String content = data['candidates'][0]['content']['parts'][0]['text'];
 
         // Clean up the response to ensure it's valid JSON
         content = content.trim();
@@ -83,7 +82,7 @@ class AIService {
           throw FormatException('Invalid JSON format in AI response');
         }
       } else {
-        throw Exception('Failed to load recipe: ${response.statusCode}');
+        throw Exception('Failed to load recipe: ${response.reasonPhrase}');
       }
     } catch (e) {
       if (e is FormatException) {
