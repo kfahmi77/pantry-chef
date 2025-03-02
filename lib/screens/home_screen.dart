@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 
 import '../services/service_ai.dart';
+import '../services/servicee_recipe.dart';
 import '../widgets/ingredient_input.dart';
+import 'history_screen.dart';
 import 'loading_screen.dart';
 import 'recipe_result_screen.dart';
 
@@ -50,6 +52,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     try {
       final recipe = await _aiService.generateRecipe(_ingredients);
+      await HiveService.saveRecipeHistory(recipe);
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
@@ -74,83 +77,187 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: Image.asset(
-          'assets/images/logo.jpg',
-          height: 40,
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.orange[100],
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Image.asset(
+                'assets/images/logo.jpg',
+                height: 32,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              'CookMaster',
+              style: TextStyle(
+                color: Colors.orange[800],
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.account_circle),
-            onPressed: () {
-              // Navigasi ke halaman profil
-            },
+            icon: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.grey[200],
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.person_outline, color: Colors.black87),
+            ),
+            onPressed: () {},
           ),
+          const SizedBox(width: 8),
         ],
       ),
       body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Hero Section
-              Text(
-                'Halo, Chef! Apa yang mau kamu masak hari ini?',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-              ),
-              const SizedBox(height: 16),
-
-              // Input Bahan
-              IngredientInput(
-                ingredients: _ingredients,
-                onAdd: _addIngredient,
-                onRemove: _removeIngredient,
-              ),
-
-              const SizedBox(height: 24),
-
-              // Animasi Panci
-              Center(
-                child: Lottie.asset(
-                  'assets/animations/cooking_pot.json',
-                  height: 200,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Hero Section dengan Gradient Background
+            Container(
+              padding: const EdgeInsets.all(24),
+              width: double.infinity,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Colors.orange[50]!,
+                    Colors.white,
+                  ],
                 ),
               ),
-
-              const SizedBox(height: 24),
-
-              // Tombol Generate Resep
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _generateRecipe,
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Halo, Chef! 👋',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          color: Colors.grey[800],
+                          fontWeight: FontWeight.w600,
+                        ),
                   ),
-                  child: const Text(
-                    'Generate Resep',
-                    style: TextStyle(fontSize: 18),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Mau masak apa hari ini?',
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Input Bahan dengan Card
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Card(
+                elevation: 2,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Bahan-bahan yang tersedia',
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                      ),
+                      const SizedBox(height: 16),
+                      IngredientInput(
+                        ingredients: _ingredients,
+                        onAdd: _addIngredient,
+                        onRemove: _removeIngredient,
+                      ),
+                    ],
                   ),
                 ),
               ),
+            ),
 
-              const SizedBox(height: 16),
-
-              // Tombol Riwayat
-              TextButton(
-                onPressed: () {
-                  // Navigasi ke halaman riwayat
-                },
-                child: const Text('Lihat Riwayat'),
+            // Animasi dengan Card
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Card(
+                elevation: 0,
+                color: Colors.orange[50],
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Center(
+                  child: Lottie.asset(
+                    'assets/animations/cooking_pot.json',
+                    height: 180,
+                  ),
+                ),
               ),
-            ],
-          ),
+            ),
+
+            // Tombol Actions
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  ElevatedButton(
+                    onPressed: _generateRecipe,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange[800],
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.restaurant_menu, color: Colors.white),
+                        const SizedBox(width: 8),
+                        const Text(
+                          'Generate Resep',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const HistoryScreen()));
+                    },
+                    icon: const Icon(Icons.history),
+                    label: const Text('Lihat Riwayat Resep'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.grey[700],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
